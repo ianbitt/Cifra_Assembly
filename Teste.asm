@@ -9,17 +9,34 @@ includelib \masm32\lib\kernel32.lib
 includelib \masm32\lib\msvcrt.lib
 include \masm32\macros\macros.asm
 
+
+.data
+    catita dd 10
+    beto dd 20
+
+
 .code
+
+somar:
+    push ebp
+    mov ebp, esp
+    sub esp, 8
+
+    mov eax, DWORD PTR [ebp+8]
+    add eax, DWORD PTR [ebp+12]
+
+    mov esp, ebp
+    pop ebp
+    ret 8
+    
+
+
 start:
-    mov eax, 0
-    mov ecx, 1
+    push catita
+    push beto
+    call somar
+    printf("O valor da soma = %d",eax)
     
-somatorio:
-    add eax, ecx
-    inc ecx
-    cmp ecx, 100
-    jbe somatorio
-    
-    printf("O valor do somatorio eh %d\n", eax)
+
     invoke ExitProcess, 0
 end start
