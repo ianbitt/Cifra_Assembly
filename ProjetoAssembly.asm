@@ -15,6 +15,9 @@ includelib \masm32\lib\masm32.lib
 um dd 1
 dois dd 2
 tres dd 3
+arraysize dd 8
+fileHandle1 dd 0
+fileHandle2 dd 0
 mensagem1 db "Bem vindos ao nosso programa de criptografia!", 0ah, 0h
 barra db "-------------------------------------", 0ah, 0h
 options db "Selecione uma das opcoes:", 0ah, 0h 
@@ -23,7 +26,7 @@ option2 db "2. Descriptografar", 0ah, 0h
 option3 db "3. Sair", 0ah, 0h
 confirm1 db "Voce selecionou a opcao de criptografar", 0ah, 0h
 confirm2 db "Voce selecionou a opcao de descriptografar", 0ah, 0h
-confirm3 db "Voce selecionou sair do programa. Obrigado por utilizar!", 0ah, 0h
+confirm3 db "Voce selecionou sair. Obrigado por utilizar nosso programa!", 0ah, 0h
 arqentr db "Digite o nome do arquivo para ser lido: ", 0ah, 0h
 arqsai db "Digite o nome do arquivo de saida: ", 0ah, 0h
 chavecript db "Digite a chave de criptografia: ", 0ah, 0h
@@ -31,10 +34,13 @@ inputString db 50 dup(0)
 inputStringArqEntr db 50 dup(0)
 inputStringArqSaid db 50 dup(0)
 inputStringChave db 50 dup(0)
+fileBuffer dd 8 dup(0)
 inputHandle dd 0
 outputHandle dd 0           ; Variável que vai armazenar o handle de saída
 write_count dd 0            ; Variável que vai armazenar os caracteres escritos na console
 tamanho_string dd 0 
+readCount dd 0
+writeCount dd 0
 comparar dd 0
 integer1 dd 0           
 
@@ -131,9 +137,66 @@ criptografar:
     invoke GetStdHandle, STD_INPUT_HANDLE
     mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringChave, sizeof inputStringChave, addr write_count, NULL
+    
+    ;----------------Fazer a abertura do arquivo que vai ser lido-----------------
+
+    mov esi, offset inputStringArqEntr ; Tratamento de erro para reconhecimento do caracter de retorno
+proximo1:
+    mov al, [esi] ; 
+    inc esi ; 
+    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    jne proximo1
+    dec esi ; 
+    xor al, al ;
+    mov [esi], al ;
+
+    invoke CreateFile, addr inputStringArqEntr, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+    mov fileHandle1, eax
+
+    ;------------Fazer a abertura do arquivo que vai ser escrito------------------
+    mov esi, offset inputStringArqSaid ; Tratamento de erro para reconhecimento do caracter de retorno
+proximo2:
+    mov al, [esi] ; 
+    inc esi ; 
+    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    jne proximo2
+    dec esi ; 
+    xor al, al ;
+    mov [esi], al ;
+
+    invoke CreateFile, addr inputStringArqSaid, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+    mov fileHandle2, eax 
+
+lerescrever:
+    ;------------Zerar o buffer antes de cada ciclo de leitura e escrita----------
+    mov eax, 0
+zerar:                                     
+    mov dword ptr fileBuffer[eax], 0
+
+    add eax, 4
+    cmp eax, 32
+    jl zerar
 
 
 
+    ;-------------Fazer a leitura do arquivo que vai ser lido---------------------
+
+    invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
+
+
+    ;------------Fazer a escrita no arquivo de destino----------------------------
+    invoke WriteFile, fileHandle2, addr fileBuffer, 8, addr writeCount, NULL
+    
+    cmp readCount, 8
+    jne terminarciclo
+    jmp lerescrever
+
+terminarciclo:
+    ;------------Fazer o fechamento do arquivo de saída---------------------------
+    invoke CloseHandle, fileHandle1
+
+    ;------------Fazer o fechamento do arquivo que foi lido-----------------------
+    invoke CloseHandle, fileHandle2
     
     jmp comeco
 
@@ -170,6 +233,66 @@ descriptografar:
     invoke GetStdHandle, STD_INPUT_HANDLE
     mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringChave, sizeof inputStringChave, addr write_count, NULL
+
+    ;----------------Fazer a abertura do arquivo que vai ser lido-----------------
+
+    mov esi, offset inputStringArqEntr ; Tratamento de erro para reconhecimento do caracter de retorno
+proximo3:
+    mov al, [esi] ; 
+    inc esi ; 
+    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    jne proximo3
+    dec esi ; 
+    xor al, al ;
+    mov [esi], al ;
+
+    invoke CreateFile, addr inputStringArqEntr, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
+    mov fileHandle1, eax
+
+    ;------------Fazer a abertura do arquivo que vai ser escrito------------------
+    mov esi, offset inputStringArqSaid ; Tratamento de erro para reconhecimento do caracter de retorno
+proximo4:
+    mov al, [esi] ; 
+    inc esi ; 
+    cmp al, 13 ; Verificar se eh o caractere ASCII CR - FINALIZAR
+    jne proximo4
+    dec esi ; 
+    xor al, al ;
+    mov [esi], al ;
+
+    invoke CreateFile, addr inputStringArqSaid, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
+    mov fileHandle2, eax 
+
+lerescrever1:
+    ;------------Zerar o buffer antes de cada ciclo de leitura e escrita----------
+    mov eax, 0
+zerar1:                                     
+    mov dword ptr fileBuffer[eax], 0
+
+    add eax, 4
+    cmp eax, 32
+    jl zerar1
+
+
+
+    ;-------------Fazer a leitura do arquivo que vai ser lido---------------------
+
+    invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
+
+
+    ;------------Fazer a escrita no arquivo de destino----------------------------
+    invoke WriteFile, fileHandle2, addr fileBuffer, 8, addr writeCount, NULL
+    
+    cmp readCount, 8
+    jne terminarciclo1
+    jmp lerescrever1
+
+terminarciclo1:
+    ;------------Fazer o fechamento do arquivo de saída---------------------------
+    invoke CloseHandle, fileHandle1
+
+    ;------------Fazer o fechamento do arquivo que foi lido-----------------------
+    invoke CloseHandle, fileHandle2
 
     jmp comeco
 
