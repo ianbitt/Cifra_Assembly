@@ -1,1 +1,1 @@
-Ola, gente! Me chamo Ian e hoje vou tentar fazer um trabalho de Assembly para tentar codificar um texto escrito nesse arquivo .txt Muito legal não e mesmo?
+ABCDEFGHOla, gente! Me chamo Ian e hoje vou tentar fazer um trabalho de Assembly para tentar codificar um texto escrito nesse arquivo .txt Muito legal não e mesmo?

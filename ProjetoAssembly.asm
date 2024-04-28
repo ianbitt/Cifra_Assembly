@@ -33,8 +33,9 @@ chavecript db "Digite a chave de criptografia: ", 0ah, 0h
 inputString db 50 dup(0)
 inputStringArqEntr db 50 dup(0)
 inputStringArqSaid db 50 dup(0)
-inputStringChave db 50 dup(0)
+inputStringChave db 8 dup(0)
 fileBuffer dd 8 dup(0)
+fileBuffer2 dd 8 dup(0)
 inputHandle dd 0
 outputHandle dd 0           ; Variável que vai armazenar o handle de saída
 write_count dd 0            ; Variável que vai armazenar os caracteres escritos na console
@@ -42,7 +43,11 @@ tamanho_string dd 0
 readCount dd 0
 writeCount dd 0
 comparar dd 0
-integer1 dd 0           
+integer1 dd 0  
+cont dd 0
+contador dd 0
+variavel dd 0
+         
 
 .code
 start:
@@ -177,6 +182,14 @@ zerar:
     cmp eax, 32
     jl zerar
 
+    mov eax, 0
+zerarr:                                     
+    mov dword ptr fileBuffer2[eax], 0
+
+    add eax, 4
+    cmp eax, 32
+    jl zerarr
+
 
 
     ;-------------Fazer a leitura do arquivo que vai ser lido---------------------
@@ -184,8 +197,36 @@ zerar:
     invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
 
 
+    ;Ou o buffer filebuffer2 não ta atualizando o valor independente das mudanças de ciclo que acontecam!
+    
+    mov cont, 0
+    ciclo:
+
+        mov esi, offset inputStringChave
+        add esi, cont
+        mov al, [esi]
+        sub al, 48   
+        movzx eax, al
+        mov variavel, eax
+      
+
+        mov esi, offset fileBuffer
+        add esi, cont
+        mov edi, offset fileBuffer2
+     
+
+        mov al, [esi]
+        add edi, variavel
+        mov [edi], al
+    
+        inc cont
+        cmp cont, 8
+        jl ciclo
+
+    
     ;------------Fazer a escrita no arquivo de destino----------------------------
-    invoke WriteFile, fileHandle2, addr fileBuffer, 8, addr writeCount, NULL
+    invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
+
     
     cmp readCount, 8
     jne terminarciclo
