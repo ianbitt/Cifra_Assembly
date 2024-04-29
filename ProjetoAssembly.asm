@@ -12,41 +12,36 @@ includelib \masm32\lib\masm32.lib
 
 
 .data
-um dd 1
-dois dd 2
-tres dd 3
-arraysize dd 8
-fileHandle1 dd 0
-fileHandle2 dd 0
 mensagem1 db "Bem vindos ao nosso programa de criptografia!", 0ah, 0h
 barra db "-------------------------------------", 0ah, 0h
 options db "Selecione uma das opcoes:", 0ah, 0h 
 option1 db "1. Criptografar", 0ah, 0h
 option2 db "2. Descriptografar", 0ah, 0h
 option3 db "3. Sair", 0ah, 0h
-confirm1 db "Voce selecionou a opcao de criptografar", 0ah, 0h
-confirm2 db "Voce selecionou a opcao de descriptografar", 0ah, 0h
+confirm1 db "Voce selecionou a opcao de criptografar!", 0ah, 0h
+confirm2 db "Voce selecionou a opcao de descriptografar!", 0ah, 0h
 confirm3 db "Voce selecionou sair. Obrigado por utilizar nosso programa!", 0ah, 0h
 arqentr db "Digite o nome do arquivo para ser lido: ", 0ah, 0h
 arqsai db "Digite o nome do arquivo de saida: ", 0ah, 0h
-chavecript db "Digite a chave de criptografia: ", 0ah, 0h
+chavecript db "Digite a chave de criptografia (0-7): ", 0ah, 0h
 inputString db 50 dup(0)
 inputStringArqEntr db 50 dup(0)
 inputStringArqSaid db 50 dup(0)
 inputStringChave db 8 dup(0)
 fileBuffer dd 8 dup(0)
 fileBuffer2 dd 8 dup(0)
+arraysize dd 8
+fileHandle1 dd 0
+fileHandle2 dd 0
 inputHandle dd 0
 outputHandle dd 0           ; Variável que vai armazenar o handle de saída
 write_count dd 0            ; Variável que vai armazenar os caracteres escritos na console
 tamanho_string dd 0 
 readCount dd 0
 writeCount dd 0
-comparar dd 0
 integer1 dd 0  
-cont dd 0
 contador dd 0
-variavel dd 0
+Chave dd 0
          
 
 .code
@@ -60,6 +55,7 @@ start:
     invoke WriteConsole, outputHandle, addr mensagem1, sizeof mensagem1, addr write_count, NULL
     
 comeco:
+
     xor eax, eax
     invoke GetStdHandle, STD_OUTPUT_HANDLE
     mov outputHandle, eax
@@ -176,18 +172,18 @@ lerescrever:
     ;------------Zerar o buffer antes de cada ciclo de leitura e escrita----------
     mov eax, 0
 zerar:                                     
-    mov dword ptr fileBuffer[eax], 0
+    mov fileBuffer[eax], 0
 
-    add eax, 4
-    cmp eax, 32
+    inc eax
+    cmp eax, 8
     jl zerar
 
     mov eax, 0
 zerarr:                                     
-    mov dword ptr fileBuffer2[eax], 0
+    mov fileBuffer2[eax], 0
 
-    add eax, 4
-    cmp eax, 32
+    inc eax
+    cmp eax, 8
     jl zerarr
 
 
@@ -199,28 +195,28 @@ zerarr:
 
     ;Ou o buffer filebuffer2 não ta atualizando o valor independente das mudanças de ciclo que acontecam!
     
-    mov cont, 0
+    mov contador, 0
     ciclo:
 
         mov esi, offset inputStringChave
-        add esi, cont
+        add esi, contador
         mov al, [esi]
         sub al, 48   
         movzx eax, al
-        mov variavel, eax
+        mov Chave, eax
       
 
         mov esi, offset fileBuffer
-        add esi, cont
+        add esi, contador
         mov edi, offset fileBuffer2
      
 
         mov al, [esi]
-        add edi, variavel
+        add edi, Chave
         mov [edi], al
     
-        inc cont
-        cmp cont, 8
+        inc contador
+        cmp contador, 8
         jl ciclo
 
     
@@ -238,7 +234,6 @@ terminarciclo:
 
     ;------------Fazer o fechamento do arquivo que foi lido-----------------------
     invoke CloseHandle, fileHandle2
-    
     jmp comeco
 
 
@@ -314,15 +309,48 @@ zerar1:
     cmp eax, 32
     jl zerar1
 
+    mov eax, 0
+zerarr1:                                     
+    mov fileBuffer2[eax], 0
+
+    inc eax
+    cmp eax, 8
+    jl zerarr1
+
 
 
     ;-------------Fazer a leitura do arquivo que vai ser lido---------------------
 
     invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
 
+    mov contador,0
+
+ciclo1:
+
+    mov esi, offset inputStringChave
+    add esi, contador
+    mov al, [esi]
+    sub al, 48   
+    movzx eax, al
+    mov Chave, eax
+      
+
+    mov esi, offset fileBuffer
+    add esi, Chave
+    mov edi, offset fileBuffer2
+
+    mov al, [esi]
+    add edi,  contador
+    mov [edi], al
+    
+    inc contador
+    cmp contador, 8
+    jl ciclo1
+
+
 
     ;------------Fazer a escrita no arquivo de destino----------------------------
-    invoke WriteFile, fileHandle2, addr fileBuffer, 8, addr writeCount, NULL
+    invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
     
     cmp readCount, 8
     jne terminarciclo1

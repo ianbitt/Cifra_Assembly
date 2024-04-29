@@ -1,0 +1,1 @@
+Agora eu vou escrever um texto que vai ser do tipo grande pra caramba. Não estou ligando muito para coesão ou conexão textual, [32] o que eu quero que aconteca é que tenha amaior quantidade de caractéres possíveis e diferentes presentes no UTF-8 (Assim a gente pode ser feliz caso funcione)!
