@@ -1,0 +1,3 @@
+Agora chegou o momento em que eu vou escrever um texto um tanto quanto grande para tentar solucionar o problema vigente no código. Esse problema basicamente consiste em [3] ao tentar criptografar o texto escrito à mão (teclado né kkk) aqui no bloco de notas, de repente, ele ao invés de fazer a criptografia, muda o formato do texto para mandarim. Hoje na aula de Arquitetura de Computadores 1 o professor recomendou que eu seguisse os seguintes passos: {1} - Criptografar normalmente e aceitar o código vindo em mandarim // {2} - Ir em algum site de leitura hexadecimal de arquivos e a partir daí verificar se a criptografia ocorre ou não. 
+
+Vou tentar fazer isso agora! Espero que dê certo.

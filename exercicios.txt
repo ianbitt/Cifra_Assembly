@@ -1,5 +1,0 @@
-Cuidado com nomes de variáveis e de rótulos (labels) muito comuns – esses nomes precisam
-ser únicos por todo o programa, e sempre existe a chance do nome já ter sido utilizado em
-alguma das bibliotecas utilizadas! Considere utilizar nomes representativos, mas que
-possuam baixa probabilidade de coincidirem com nomes já utilizados em bibliotecas que
-você usará.

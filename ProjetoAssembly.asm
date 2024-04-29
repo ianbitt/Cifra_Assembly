@@ -27,15 +27,15 @@ chavecript db "Digite a chave de criptografia (0-7): ", 0ah, 0h
 inputString db 50 dup(0)
 inputStringArqEntr db 50 dup(0)
 inputStringArqSaid db 50 dup(0)
-inputStringChave db 8 dup(0)
+inputStringChave db 11 dup(0)
 fileBuffer dd 8 dup(0)
 fileBuffer2 dd 8 dup(0)
 arraysize dd 8
 fileHandle1 dd 0
 fileHandle2 dd 0
 inputHandle dd 0
-outputHandle dd 0           ; Variável que vai armazenar o handle de saída
-write_count dd 0            ; Variável que vai armazenar os caracteres escritos na console
+outputHandle dd 0           
+write_count dd 0            
 tamanho_string dd 0 
 readCount dd 0
 writeCount dd 0
@@ -92,7 +92,7 @@ proximo:
     mov [esi], al ;
     
 
-    invoke atodw, addr inputString
+    invoke atodw, addr inputString ; Com o input do usuário, selecionar qual função deseja executar
     mov integer1, eax
     
     cmp integer1, 1
@@ -168,23 +168,15 @@ proximo2:
     invoke CreateFile, addr inputStringArqSaid, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
     mov fileHandle2, eax 
 
-lerescrever:
-    ;------------Zerar o buffer antes de cada ciclo de leitura e escrita----------
+lerescrevercripto:
+    ;------------Zerar os buffers antes de cada ciclo de leitura e escrita----------
     mov eax, 0
 zerar:                                     
     mov fileBuffer[eax], 0
-
+    mov fileBuffer2[eax], 0
     inc eax
     cmp eax, 8
     jl zerar
-
-    mov eax, 0
-zerarr:                                     
-    mov fileBuffer2[eax], 0
-
-    inc eax
-    cmp eax, 8
-    jl zerarr
 
 
 
@@ -192,41 +184,39 @@ zerarr:
 
     invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
 
-
-    ;Ou o buffer filebuffer2 não ta atualizando o valor independente das mudanças de ciclo que acontecam!
     
     mov contador, 0
-    ciclo:
+    ciclocripto:
 
         mov esi, offset inputStringChave
         add esi, contador
         mov al, [esi]
         sub al, 48   
         movzx eax, al
-        mov Chave, eax
+        mov Chave, eax                     ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer[cont] deve ir)
       
 
-        mov esi, offset fileBuffer
-        add esi, contador
-        mov edi, offset fileBuffer2
+        mov esi, offset fileBuffer         ;Colocar em esi o ponteiro para o filebuffer
+        add esi, contador                  ;Adicionar com o contador do ciclo qual caracter do filebuffer estamos acessando [0], [1], [2]....
+        mov edi, offset fileBuffer2        ;Atribuir a edi o ponteiro para o filebuffer2 que é o filebuffer de saída
      
 
-        mov al, [esi]
-        add edi, Chave
-        mov [edi], al
+        mov al, [esi]                      ;Mover para al o conteúdo do filebuffer apontado por esi
+        add edi, Chave                     ;Adicionar à edi (usando a Chave) a posição que o caracter deve ficar 
+        mov [edi], al                      ;Mover para o conteúdo da posição que edi aponta o al (o que existe no esi na posição indicada)
     
-        inc contador
+        inc contador                       ;Contador que é usado para avançar no índice de filebuffer. A exemplo de filebuffer[0] no primieiro ciclo e filebuffer[1] no segundo
         cmp contador, 8
-        jl ciclo
+        jl ciclocripto
 
     
     ;------------Fazer a escrita no arquivo de destino----------------------------
     invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
 
     
-    cmp readCount, 8
+    cmp readCount, 8                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
     jne terminarciclo
-    jmp lerescrever
+    jmp lerescrevercripto
 
 terminarciclo:
     ;------------Fazer o fechamento do arquivo de saída---------------------------
@@ -299,24 +289,16 @@ proximo4:
     invoke CreateFile, addr inputStringArqSaid, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL
     mov fileHandle2, eax 
 
-lerescrever1:
+lerescreverdescripto:
     ;------------Zerar o buffer antes de cada ciclo de leitura e escrita----------
     mov eax, 0
 zerar1:                                     
-    mov dword ptr fileBuffer[eax], 0
+    mov fileBuffer[eax], 0
+    mov fileBuffer2[eax], 0
 
     add eax, 4
     cmp eax, 32
     jl zerar1
-
-    mov eax, 0
-zerarr1:                                     
-    mov fileBuffer2[eax], 0
-
-    inc eax
-    cmp eax, 8
-    jl zerarr1
-
 
 
     ;-------------Fazer a leitura do arquivo que vai ser lido---------------------
@@ -325,36 +307,36 @@ zerarr1:
 
     mov contador,0
 
-ciclo1:
+ciclodescripto:
 
     mov esi, offset inputStringChave
     add esi, contador
     mov al, [esi]
     sub al, 48   
     movzx eax, al
-    mov Chave, eax
+    mov Chave, eax                         ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer2[cont] deve ir)
       
 
-    mov esi, offset fileBuffer
-    add esi, Chave
-    mov edi, offset fileBuffer2
+    mov esi, offset fileBuffer             ;Colocar em esi o ponteiro para o filebuffer
+    add esi, Chave                         ;Adicionar com o valor da Chave qual caracter do filebuffer estamos acessando [0], [1], [2]....
+    mov edi, offset fileBuffer2            ;Atribuir a edi o ponteiro para o filebuffer2 que é o filebuffer de saída
 
-    mov al, [esi]
-    add edi,  contador
-    mov [edi], al
+    mov al, [esi]                          ;Mover para al o conteúdo do filebuffer apontado por esi
+    add edi,  contador                     ;Adicionar à edi (usando o contador) a posição que o caracter deve ficar para descriptografar
+    mov [edi], al                          ;Mover para o conteúdo da posição que edi aponta o al (o que existe no esi na posição indicada)
     
-    inc contador
-    cmp contador, 8
-    jl ciclo1
+    inc contador                           ;Contador que é usado para avançar no índice de filebuffer2. A exemplo de filebuffer2[0] no primieiro ciclo e filebuffer2[1] no segundo
+    cmp contador, 8                        
+    jl ciclodescripto
 
 
 
     ;------------Fazer a escrita no arquivo de destino----------------------------
     invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
     
-    cmp readCount, 8
+    cmp readCount, 8                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
     jne terminarciclo1
-    jmp lerescrever1
+    jmp lerescreverdescripto
 
 terminarciclo1:
     ;------------Fazer o fechamento do arquivo de saída---------------------------
