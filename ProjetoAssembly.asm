@@ -12,7 +12,7 @@ includelib \masm32\lib\masm32.lib
 
 
 .data
-mensagem1 db "Bem vindos ao nosso programa de criptografia!", 0ah, 0h
+mensagem1 db "Bem vindos ao nosso programa de criptografia!", 0ah, 0h        ;Textos utilizados ao longo do programa
 barra db "-------------------------------------", 0ah, 0h
 options db "Selecione uma das opcoes:", 0ah, 0h 
 option1 db "1. Criptografar", 0ah, 0h
@@ -24,60 +24,46 @@ confirm3 db "Voce selecionou sair. Obrigado por utilizar nosso programa!", 0ah, 
 arqentr db "Digite o nome do arquivo para ser lido: ", 0ah, 0h
 arqsai db "Digite o nome do arquivo de saida: ", 0ah, 0h
 chavecript db "Digite a chave de criptografia (0-7): ", 0ah, 0h
-inputString db 50 dup(0)
-inputStringArqEntr db 50 dup(0)
-inputStringArqSaid db 50 dup(0)
-inputStringChave db 11 dup(0)
-fileBuffer dd 8 dup(0)
-fileBuffer2 dd 8 dup(0)
-arraysize dd 8
-fileHandle1 dd 0
-fileHandle2 dd 0
-inputHandle dd 0
-outputHandle dd 0           
-write_count dd 0            
-tamanho_string dd 0 
-readCount dd 0
-writeCount dd 0
-integer1 dd 0  
-contador dd 0
-Chave dd 0
+inputString db 4 dup(0)               ;Array para armazenar a opção escolhida pelo usuário
+inputStringArqEntr db 50 dup(0)       ;Array para armazenar o nome do arquivo de entrada
+inputStringArqSaid db 50 dup(0)       ;Array para armazenar o nome do arquivo de saída
+inputStringChave db 11 dup(0)         ;Array para armazenar a chave digitada pelo usuário
+fileBuffer dd 8 dup(0)                ;Array do buffer do arquivo de entrada
+fileBuffer2 dd 8 dup(0)               ;Array que vai ser utilizado como buffer do arquivo de saída
+fileHandle1 dd 0                      ;Handle utilizado na função ReadFile
+fileHandle2 dd 0                      ;Handle utilizado na função WriteFile
+inputHandle dd 0                      ;Handle utilizado na função ReadConsole
+outputHandle dd 0                     ;Handle utilizado na função WriteConsole
+write_count dd 0                      ;Contador de caracteres escritos pelas funções WriteConsole e ReadConsole
+readCount dd 0                        ;Contador de caracteres lidos na função ReadFile
+writeCount dd 0                       ;Contador de caracteres escritos na função WriteFile
+integer1 dd 0                         ;Variável que recebe a opção escolhida pelo usuário no menu inicial
+contador dd 0                         ;Variável de contagem de ciclos na função criptografar e descriptografar
+Chave dd 0                            ;Variável que vai armazenar o valor lido na posição [contador] do array da chave
          
 
 .code
 start:
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
+    invoke GetStdHandle, STD_OUTPUT_HANDLE               ;Usar a função GetStdHandle para guardar o handle de printar na variável outputHandle
     mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr barra, sizeof barra, addr write_count, NULL
     
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr mensagem1, sizeof mensagem1, addr write_count, NULL
     
 comeco:
 
     xor eax, eax
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr barra, sizeof barra, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr options, sizeof options, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr option1, sizeof option1, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr option2, sizeof option2, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr option3, sizeof option3, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
+    invoke GetStdHandle, STD_INPUT_HANDLE                ;Usar a função GetStdHandle para guardar o handle de input na variável inputHandle
     mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputString, sizeof inputString, addr write_count, NULL
 
@@ -107,36 +93,20 @@ proximo:
 
 
 criptografar:
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr confirm1, sizeof confirm1, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr barra, sizeof barra, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr arqentr, sizeof arqentr, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringArqEntr, sizeof inputStringArqEntr, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr arqsai, sizeof arqsai, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringArqSaid, sizeof inputStringArqSaid, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr chavecript, sizeof chavecript, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringChave, sizeof inputStringChave, addr write_count, NULL
     
     ;----------------Fazer a abertura do arquivo que vai ser lido-----------------
@@ -184,6 +154,8 @@ zerar:
 
     invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
 
+    cmp readCount, 0                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
+    je terminarciclocripto
     
     mov contador, 0
     ciclocripto:
@@ -193,7 +165,7 @@ zerar:
         mov al, [esi]
         sub al, 48   
         movzx eax, al
-        mov Chave, eax                     ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer[cont] deve ir)
+        mov Chave, eax                   ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer[cont] deve ir)
       
 
         mov esi, offset fileBuffer         ;Colocar em esi o ponteiro para o filebuffer
@@ -213,12 +185,9 @@ zerar:
     ;------------Fazer a escrita no arquivo de destino----------------------------
     invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
 
-    
-    cmp readCount, 8                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
-    jne terminarciclo
-    jmp lerescrevercripto
+    jmp lerescrevercripto                  ;Depois de escrever no arquivo de saída, voltar para o início do ciclo de criptografia
 
-terminarciclo:
+terminarciclocripto:
     ;------------Fazer o fechamento do arquivo de saída---------------------------
     invoke CloseHandle, fileHandle1
 
@@ -228,36 +197,20 @@ terminarciclo:
 
 
 descriptografar:
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr confirm2, sizeof confirm2, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr barra, sizeof barra, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr arqentr, sizeof arqentr, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringArqEntr, sizeof inputStringArqEntr, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr arqsai, sizeof arqsai, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringArqSaid, sizeof inputStringArqSaid, addr write_count, NULL
 
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr chavecript, sizeof chavecript, addr write_count, NULL
 
-    invoke GetStdHandle, STD_INPUT_HANDLE
-    mov inputHandle, eax
     invoke ReadConsole, inputHandle, addr inputStringChave, sizeof inputStringChave, addr write_count, NULL
 
     ;----------------Fazer a abertura do arquivo que vai ser lido-----------------
@@ -305,16 +258,18 @@ zerar1:
 
     invoke ReadFile, fileHandle1, addr fileBuffer, 8, addr readCount, NULL
 
-    mov contador,0
+    cmp readCount, 0                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
+    je terminarciclodescripto
 
+    mov contador,0
 ciclodescripto:
 
-    mov esi, offset inputStringChave
+    mov esi, offset inputStringChave       
     add esi, contador
     mov al, [esi]
     sub al, 48   
     movzx eax, al
-    mov Chave, eax                         ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer2[cont] deve ir)
+    mov Chave, eax                       ;Chave vira um modificador de acesso (representando em qual posição mostrada pela chave, o caracter indicado na posiçao filebuffer2[cont] deve ir)
       
 
     mov esi, offset fileBuffer             ;Colocar em esi o ponteiro para o filebuffer
@@ -334,11 +289,9 @@ ciclodescripto:
     ;------------Fazer a escrita no arquivo de destino----------------------------
     invoke WriteFile, fileHandle2, addr fileBuffer2, 8, addr writeCount, NULL
     
-    cmp readCount, 8                       ;Quando ele não ler 8 caracteres, fecha os arquivos de Read e Write pois já chegou no final do arquivo.
-    jne terminarciclo1
-    jmp lerescreverdescripto
+    jmp lerescreverdescripto               ;Depois de escrever no arquivo de saída, voltar para o início do ciclo de descriptografia
 
-terminarciclo1:
+terminarciclodescripto:
     ;------------Fazer o fechamento do arquivo de saída---------------------------
     invoke CloseHandle, fileHandle1
 
@@ -350,8 +303,6 @@ terminarciclo1:
 
    
  fim:
-    invoke GetStdHandle, STD_OUTPUT_HANDLE
-    mov outputHandle, eax
     invoke WriteConsole, outputHandle, addr confirm3, sizeof confirm3, addr write_count, NULL
     invoke ExitProcess, 0
 end start
