@@ -1,1 +1,0 @@
-Escrevendo um texto para testar a questão dos últimos caracteres em branco, apesar de eu achar que isso não está acontecendo eai
